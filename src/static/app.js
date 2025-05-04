@@ -4,24 +4,29 @@ document.addEventListener('DOMContentLoaded', function() {
   const signupForm = document.getElementById('signup-form');
   const messageDiv = document.getElementById('message');
   
-  // 添加事件委托，将事件监听器添加到父元素
+  // 使用事件委托处理删除图标点击
   activitiesList.addEventListener('click', function(e) {
     if (e.target.classList.contains('delete-icon')) {
       handleUnregister(e);
     }
   });
   
-  // Fetch activities from API
-  fetch('/activities')
-    .then(response => response.json())
-    .then(activities => {
-      displayActivities(activities);
-      populateActivitySelect(activities);
-    })
-    .catch(error => {
-      console.error('Error fetching activities:', error);
-      activitiesList.innerHTML = '<p class="error">Failed to load activities. Please try again later.</p>';
-    });
+  // 初始加载活动列表
+  loadActivities();
+  
+  // 封装获取活动的函数，以便重复使用
+  function loadActivities() {
+    fetch('/activities')
+      .then(response => response.json())
+      .then(activities => {
+        displayActivities(activities);
+        populateActivitySelect(activities);
+      })
+      .catch(error => {
+        console.error('Error fetching activities:', error);
+        activitiesList.innerHTML = '<p class="error">Failed to load activities. Please try again later.</p>';
+      });
+  }
   
   // Function to display activities with participants
   function displayActivities(activities) {
@@ -44,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
               ${details.participants.map(email => 
                 `<li>
                   ${email}
-                  <span class="delete-icon" data-activity="${name}" data-email="${email}">✖</span>
+                  <span class="delete-icon" data-activity="${name}" data-email="${email}">删除</span>
                 </li>`
               ).join('')}
             </ul>
@@ -62,11 +67,6 @@ document.addEventListener('DOMContentLoaded', function() {
       
       activitiesList.appendChild(card);
     }
-    
-    // 移除原来的事件监听器添加方式，改为使用事件委托
-    // document.querySelectorAll('.delete-icon').forEach(icon => {
-    //   icon.addEventListener('click', handleUnregister);
-    // });
   }
   
   // Function to handle unregister
@@ -75,33 +75,37 @@ document.addEventListener('DOMContentLoaded', function() {
     const email = e.target.dataset.email;
     
     if (confirm(`Are you sure you want to remove ${email} from ${activityName}?`)) {
-      console.log(`Unregistering ${email} from ${activityName}`); // 添加调试日志
+      console.log(`Unregistering ${email} from ${activityName}`); // 调试日志
       
-      // Send unregister request
+      // 发送注销请求
       fetch(`/activities/${encodeURIComponent(activityName)}/unregister?email=${encodeURIComponent(email)}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
       })
-        .then(response => {
-          if (!response.ok) {
-            return response.json().then(data => {
-              throw new Error(data.detail || 'Failed to unregister');
-            });
-          }
-          return response.json();
-        })
-        .then(data => {
-          showMessage(data.message, 'success');
-          // Refresh activities to show updated participants
-          return fetch('/activities');
-        })
-        .then(response => response.json())
-        .then(activities => {
-          displayActivities(activities);
-        })
-        .catch(error => {
-          console.error('Error during unregister:', error); // 添加错误日志
-          showMessage(error.message, 'error');
-        });
+      .then(response => {
+        console.log('Unregister response status:', response.status); // 调试日志
+        
+        if (!response.ok) {
+          return response.json().then(data => {
+            throw new Error(data.detail || 'Failed to unregister');
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Unregister success:', data); // 调试日志
+        showMessage(data.message, 'success');
+        
+        // 重新加载活动列表以显示更新后的参与者
+        loadActivities();
+      })
+      .catch(error => {
+        console.error('Error during unregister:', error); // 错误日志
+        showMessage(error.message || 'Failed to unregister participant', 'error');
+      });
     }
   }
   
@@ -146,12 +150,8 @@ document.addEventListener('DOMContentLoaded', function() {
       })
       .then(data => {
         showMessage(data.message, 'success');
-        // Refresh activities to show updated participants
-        fetch('/activities')
-          .then(response => response.json())
-          .then(activities => {
-            displayActivities(activities);
-          });
+        // 重新加载活动数据
+        loadActivities();
       })
       .catch(error => {
         showMessage(error.message, 'error');

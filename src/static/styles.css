@@ -106,15 +106,21 @@ section h3 {
   cursor: pointer;
   color: #e53935;
   margin-left: 10px;
-  font-size: 1.1em;
-  opacity: 0.7;
+  font-size: 1.2em;
+  opacity: 1;
   transition: all 0.2s;
   display: inline-block;
+  font-weight: bold;
+  background-color: #ffebee;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid #ef9a9a;
 }
 
 .delete-icon:hover {
   opacity: 1;
   transform: scale(1.1);
+  background-color: #ffcdd2;
 }
 
 .no-participants {
