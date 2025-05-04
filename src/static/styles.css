@@ -88,14 +88,33 @@ section h3 {
 }
 
 .activity-card ul {
-  list-style-type: circle;
-  padding-left: 20px;
+  list-style-type: none;
+  padding-left: 5px;
   margin-bottom: 10px;
 }
 
 .activity-card li {
   margin-bottom: 3px;
   font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.delete-icon {
+  cursor: pointer;
+  color: #e53935;
+  margin-left: 10px;
+  font-size: 1.1em;
+  opacity: 0.7;
+  transition: all 0.2s;
+  display: inline-block;
+}
+
+.delete-icon:hover {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .no-participants {

@@ -34,7 +34,12 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="participants">
             <h5>Current Participants:</h5>
             <ul>
-              ${details.participants.map(email => `<li>${email}</li>`).join('')}
+              ${details.participants.map(email => 
+                `<li>
+                  ${email}
+                  <span class="delete-icon" data-activity="${name}" data-email="${email}">✖</span>
+                </li>`
+              ).join('')}
             </ul>
           </div>
         ` 
@@ -49,6 +54,44 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
       
       activitiesList.appendChild(card);
+    }
+    
+    // Add event listeners to delete icons
+    document.querySelectorAll('.delete-icon').forEach(icon => {
+      icon.addEventListener('click', handleUnregister);
+    });
+  }
+  
+  // Function to handle unregister
+  function handleUnregister(e) {
+    const activityName = e.target.dataset.activity;
+    const email = e.target.dataset.email;
+    
+    if (confirm(`Are you sure you want to remove ${email} from ${activityName}?`)) {
+      // Send unregister request
+      fetch(`/activities/${encodeURIComponent(activityName)}/unregister?email=${encodeURIComponent(email)}`, {
+        method: 'DELETE'
+      })
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(data => {
+              throw new Error(data.detail || 'Failed to unregister');
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          showMessage(data.message, 'success');
+          // Refresh activities to show updated participants
+          return fetch('/activities');
+        })
+        .then(response => response.json())
+        .then(activities => {
+          displayActivities(activities);
+        })
+        .catch(error => {
+          showMessage(error.message, 'error');
+        });
     }
   }
   
