@@ -4,6 +4,13 @@ document.addEventListener('DOMContentLoaded', function() {
   const signupForm = document.getElementById('signup-form');
   const messageDiv = document.getElementById('message');
   
+  // 添加事件委托，将事件监听器添加到父元素
+  activitiesList.addEventListener('click', function(e) {
+    if (e.target.classList.contains('delete-icon')) {
+      handleUnregister(e);
+    }
+  });
+  
   // Fetch activities from API
   fetch('/activities')
     .then(response => response.json())
@@ -56,10 +63,10 @@ document.addEventListener('DOMContentLoaded', function() {
       activitiesList.appendChild(card);
     }
     
-    // Add event listeners to delete icons
-    document.querySelectorAll('.delete-icon').forEach(icon => {
-      icon.addEventListener('click', handleUnregister);
-    });
+    // 移除原来的事件监听器添加方式，改为使用事件委托
+    // document.querySelectorAll('.delete-icon').forEach(icon => {
+    //   icon.addEventListener('click', handleUnregister);
+    // });
   }
   
   // Function to handle unregister
@@ -68,6 +75,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const email = e.target.dataset.email;
     
     if (confirm(`Are you sure you want to remove ${email} from ${activityName}?`)) {
+      console.log(`Unregistering ${email} from ${activityName}`); // 添加调试日志
+      
       // Send unregister request
       fetch(`/activities/${encodeURIComponent(activityName)}/unregister?email=${encodeURIComponent(email)}`, {
         method: 'DELETE'
@@ -90,6 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
           displayActivities(activities);
         })
         .catch(error => {
+          console.error('Error during unregister:', error); // 添加错误日志
           showMessage(error.message, 'error');
         });
     }
